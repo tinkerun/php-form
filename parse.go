@@ -40,11 +40,11 @@ func ParseCode(code []byte) (*ast.Root, error) {
 	}
 
 	res := rootNode.(*ast.Root)
-	stmtLast := res.Stmts[len(res.Stmts) - 1]
+	stmtLast := res.Stmts[len(res.Stmts)-1]
 
 	// 处理最后一个空 stmt
 	if _, ok := stmtLast.(*ast.StmtNop); ok {
-		res.Stmts = res.Stmts[:len(res.Stmts) - 1]
+		res.Stmts = res.Stmts[:len(res.Stmts)-1]
 	}
 
 	return res, nil

@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestInput_IsEmpty(t *testing.T) {
 	type fields struct {
@@ -14,31 +17,31 @@ func TestInput_IsEmpty(t *testing.T) {
 		want   bool
 	}{
 		{
-			name:   "TestInput_IsEmpty: all empty",
+			name: "TestInput_IsEmpty: all empty",
 			fields: fields{
 				Label: "",
 				Value: "",
 				Type:  "",
 			},
-			want:   false,
+			want: false,
 		},
 		{
-			name:   "TestInput_IsEmpty: with default type",
+			name: "TestInput_IsEmpty: with default type",
 			fields: fields{
 				Label: "",
 				Value: "",
 				Type:  "text",
 			},
-			want:   true,
+			want: true,
 		},
 		{
-			name:   "TestInput_IsEmpty: with label",
+			name: "TestInput_IsEmpty: with label",
 			fields: fields{
 				Label: "label",
 				Value: "",
 				Type:  "text",
 			},
-			want:   false,
+			want: false,
 		},
 	}
 	for _, tt := range tests {
@@ -57,21 +60,21 @@ func TestInput_IsEmpty(t *testing.T) {
 
 func TestInput_Set(t *testing.T) {
 	type args struct {
-		k []byte
-		v []byte
+		k string
+		v string
 	}
 	tests := []struct {
-		name   string
-		args   args
-		want   *Input
+		name string
+		args args
+		want *Input
 	}{
 		{
-			name:   "TestInput_Set: should be correctly",
-			args:   args{
-				k: []byte("label"),
-				v: []byte("label"),
+			name: "TestInput_Set: should be correctly",
+			args: args{
+				k: "label",
+				v: "label",
 			},
-			want:   &Input{
+			want: &Input{
 				Label: "label",
 				Value: "",
 				Type:  "",
@@ -79,12 +82,12 @@ func TestInput_Set(t *testing.T) {
 		},
 
 		{
-			name:   "TestInput_Set: should be correctly",
-			args:   args{
-				k: []byte("other"),
-				v: []byte("label"),
+			name: "TestInput_Set: should be correctly",
+			args: args{
+				k: "other",
+				v: "label",
 			},
-			want:   &Input{
+			want: &Input{
 				Label: "",
 				Value: "",
 				Type:  "",
@@ -96,6 +99,27 @@ func TestInput_Set(t *testing.T) {
 			i := &Input{}
 			if i.Set(tt.args.k, tt.args.v); *i != *tt.want {
 				t.Errorf("Set() = %v, want %v", i, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewInput(t *testing.T) {
+	tests := []struct {
+		name string
+		want *Input
+	}{
+		{
+			name: "TestNewInput",
+			want: &Input{
+				Type: "text",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewInput(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewInput() = %v, want %v", got, tt.want)
 			}
 		})
 	}

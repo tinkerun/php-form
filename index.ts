@@ -1,5 +1,5 @@
-import './wasm_exec.js'
-import load from './php-form.wasm'
+import './build/wasm_exec.js'
+import load from './build/php-form.wasm'
 
 interface Input {
   label: string
@@ -16,12 +16,17 @@ interface Form {
   stringifyCode: (inputs: string) => Promise<string>
 }
 
-declare var PHPFormFunc: Form
-declare var Go: any
-
-let phpForm: PHPForm | undefined
+declare global {
+  interface Window {
+    PHPFormFunc: Form
+    Go: any
+  }
+}
 
 export class PHPForm {
+
+  private static phpForm: PHPForm | undefined
+
   private readonly form: Form
 
   constructor (form: Form) {
@@ -37,15 +42,15 @@ export class PHPForm {
   }
 
   static async instance (code: string, prefix?: string): Promise<PHPForm> {
-    if (phpForm != null) {
-      return phpForm
+    if (PHPForm.phpForm != null) {
+      return PHPForm.phpForm
     }
 
-    const go = new Go()
+    const go = new window.Go()
     const instance = await load(go.importObject)
     go.run(instance)
 
-    phpForm = new PHPForm(PHPFormFunc(code, prefix))
-    return phpForm
+    PHPForm.phpForm = new PHPForm(window.PHPFormFunc(code, prefix))
+    return PHPForm.phpForm
   }
 }

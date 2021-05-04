@@ -6,7 +6,8 @@
   "author": "billyct <billy_allen@126.com>",
   "license": "MIT",
   "scripts": {
-    "build": "node ./build.js",
+    "start": "node ./build.js",
+    "build": "NODE_ENV=production node ./build.js",
     "lint": "ts-standard \"*.ts\""
   },
   "devDependencies": {

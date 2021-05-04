@@ -16,9 +16,9 @@ func JsError(err error) js.Error {
 }
 
 func JSPromise(fn PromiseFn) js.Func {
-	return js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	return js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 
-		handler := js.FuncOf(func(this js.Value, argsPromise []js.Value) interface{} {
+		handler := js.FuncOf(func(_ js.Value, argsPromise []js.Value) interface{} {
 			go func() {
 				fn(argsPromise[0], argsPromise[1], args...)
 			}()
@@ -30,16 +30,19 @@ func JSPromise(fn PromiseFn) js.Func {
 	})
 }
 
-func PHPForm(this js.Value, args []js.Value) interface{} {
+func PHPForm(_ js.Value, args []js.Value) interface{} {
 
-	form := NewForm(args[0].String())
-
-	if len(args) > 1 {
-		form = form.WithPrefix(args[1].String())
+	var ss []string
+	for _, arg := range args {
+		if !arg.IsUndefined() {
+			ss = append(ss, arg.String())
+		}
 	}
 
+	form := NewForm(ss...)
+
 	return map[string]interface{}{
-		"stringify": JSPromise(func(resolve js.Value, reject js.Value, args ...js.Value) interface{} {
+		"stringifyCode": JSPromise(func(resolve js.Value, reject js.Value, args ...js.Value) interface{} {
 			s := args[0].String()
 
 			var ms []map[string]interface{}
@@ -61,7 +64,13 @@ func PHPForm(this js.Value, args []js.Value) interface{} {
 
 			return resolve.Invoke(res)
 		}),
-		"parse": JSPromise(func(resolve js.Value, reject js.Value, args ...js.Value) interface{} {
+		"parseCode": JSPromise(func(resolve js.Value, reject js.Value, args ...js.Value) interface{} {
+
+			if len(args) > 0 && !args[0].IsUndefined() {
+				// 如果有参数则将第一个参数作为 code 传给 form
+				form.SetCode(args[0].String())
+			}
+
 			inputs, err := form.GenerateInputs()
 			if err != nil {
 				return reject.Invoke(JsError(err))
@@ -84,6 +93,6 @@ func PHPForm(this js.Value, args []js.Value) interface{} {
 }
 
 func main() {
-	js.Global().Set("PHPForm", js.FuncOf(PHPForm))
+	js.Global().Set("PHPFormFunc", js.FuncOf(PHPForm))
 	<-make(chan struct{})
 }

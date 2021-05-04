@@ -14,19 +14,22 @@ type Form struct {
 	root   *ast.Root
 }
 
-func NewForm(code string) *Form {
-	return &Form{
-		prefix: "_",
-		code:   code,
-	}
-}
+func NewForm(args... string) *Form {
+	f := &Form{}
 
-func (f *Form) WithPrefix(s string) *Form {
-	if s != "" {
-		f.prefix = s
+	if len(args) > 0 {
+		f.code = args[0]
+	}
+
+	if len(args) > 1 {
+		f.prefix = args[1]
 	}
 
 	return f
+}
+
+func (f *Form) SetCode(code string) {
+	f.code = code
 }
 
 func (f *Form) Prefix() string {
@@ -64,7 +67,10 @@ func (f *Form) GenerateCodeWithInputs(inputs []Input) (string, error) {
 	for _, stmt := range stmtList {
 		// 如果是表达式
 		if expr, ok := stmt.(*ast.StmtExpression); ok {
-			f.UpdateExprAssignWithInputs(expr.Expr.(*ast.ExprAssign), inputs)
+			exprAssign := expr.Expr.(*ast.ExprAssign)
+			if f.IsExprAssignMatched(exprAssign) {
+				f.UpdateExprAssignWithInputs(exprAssign, inputs)
+			}
 		}
 	}
 
@@ -78,21 +84,17 @@ func (f *Form) GenerateCodeWithInputs(inputs []Input) (string, error) {
 
 // 根据 inputs 更新 ExprAssign
 func (f *Form) UpdateExprAssignWithInputs(expr *ast.ExprAssign, inputs []Input) {
-	// 匹配前缀
-	if f.IsExprAssignMatched(expr) {
-		for _, input := range inputs {
-			// 变量名匹配
-			if input.Name == f.GetExprValue(expr.Var) {
+	for _, input := range inputs {
+		// 变量名匹配
+		isSameVar := input.Name == f.GetExprValue(expr.Var)
 
-				if expr, ok := expr.Expr.(*ast.ExprArray); ok {
-					for _, item := range expr.Items {
-						key, val := f.GetItemExpr(item)
-						if f.GetExprValue(key) == "value" {
-							f.SetExprValue(val, input.Value)
+		if expr, ok := expr.Expr.(*ast.ExprArray); ok && isSameVar{
+			for _, item := range expr.Items {
+				key, val := f.GetItemExpr(item)
+				if f.GetExprValue(key) == "value" {
+					f.SetExprValue(val, input.Value)
 
-							return
-						}
-					}
+					return
 				}
 			}
 		}
@@ -108,7 +110,7 @@ func (f *Form) IsExprAssignMatched(expr *ast.ExprAssign) bool {
 func (f *Form) GetInputFromExprAssign(expr *ast.ExprAssign) *Input {
 	input := NewInput()
 
-	if exprArray, ok := expr.Expr.(*ast.ExprArray); ok && f.IsExprAssignMatched(expr) {
+	if exprArray, ok := expr.Expr.(*ast.ExprArray); ok {
 		input.Set("name", f.GetExprValue(expr.Var))
 
 		for _, item := range exprArray.Items {
@@ -134,10 +136,12 @@ func (f *Form) GenerateInputs() ([]Input, error) {
 		// 如果是表达式
 		if expr, ok := stmt.(*ast.StmtExpression); ok {
 
-			input := f.GetInputFromExprAssign(expr.Expr.(*ast.ExprAssign))
-
-			if !input.IsEmpty() {
-				res = append(res, *input)
+			exprAssign := expr.Expr.(*ast.ExprAssign)
+			if f.IsExprAssignMatched(exprAssign) {
+				input := f.GetInputFromExprAssign(exprAssign)
+				if !input.IsEmpty() {
+					res = append(res, *input)
+				}
 			}
 		}
 	}

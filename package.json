@@ -1,0 +1,18 @@
+{
+  "name": "php-form",
+  "version": "1.0.0",
+  "main": "./build/index.js",
+  "repository": "https://github.com/tinkerun/php-form.git",
+  "author": "billyct <billy_allen@126.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "node ./build.js",
+    "lint": "ts-standard \"*.ts\""
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.1",
+    "esbuild": "^0.11.18",
+    "ts-standard": "^10.0.0",
+    "typescript": "^4.2.4"
+  }
+}

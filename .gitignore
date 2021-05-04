@@ -2,3 +2,9 @@
 /build
 
 .DS_Store
+
+php-form.wasm
+wasm_exec.js
+
+/node_modules
+yarn.lock

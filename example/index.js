@@ -1,4 +1,4 @@
-import {PHPForm} from '../build/index.js';
+import {PHPForm} from '../lib/index.js';
 
 (async () => {
     const form = await PHPForm.instance(`

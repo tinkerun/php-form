@@ -63,7 +63,7 @@ build({
   ],
   format: 'esm',
   bundle: true,
-  outdir: 'build',
+  outdir: 'lib',
   plugins: [wasmPlugin],
   external: [
     'fs',

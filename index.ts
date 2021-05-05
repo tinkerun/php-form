@@ -1,5 +1,6 @@
-import './build/wasm_exec.js'
-import load from './build/php-form.wasm'
+import './lib/wasm_exec.js'
+// @ts-expect-error
+import load from './lib/php-form.wasm'
 
 interface Input {
   label: string
@@ -24,7 +25,6 @@ declare global {
 }
 
 export class PHPForm {
-
   private static phpForm: PHPForm | undefined
 
   private readonly form: Form

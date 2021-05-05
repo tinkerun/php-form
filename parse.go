@@ -11,6 +11,7 @@ import (
 )
 
 func Parse(code []byte) (ast.Vertex, error) {
+	code = bytes.TrimSpace(code)
 	if bytes.HasPrefix(code, []byte("<?")) || bytes.HasPrefix(code, []byte("<?php")) {
 		return ParseCode(code)
 	}

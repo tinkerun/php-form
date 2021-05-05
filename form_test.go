@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestForm_ParseCode(t *testing.T) {
+func TestForm_Parse(t *testing.T) {
 	type fields struct {
 		prefix string
 		code   string
@@ -15,11 +15,11 @@ func TestForm_ParseCode(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    []Input
+		want    []Field
 		wantErr bool
 	}{
 		{
-			name: "TestForm_ParseCode: #normal",
+			name: "TestForm_Parse: #normal",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -40,31 +40,37 @@ $_age = [
 ];
 `,
 			},
-			want: []Input{
+			want: []Field{
 				{
-					Label: "Name",
-					Value: "billyct",
-					Type:  "text",
 					Name:  "$_name",
+					Value: "billyct",
+					Data: map[string]interface{}{
+						"label": "Name",
+						"type":  "text",
+					},
 				},
 				{
-					Label: "Is Admin",
-					Value: "true",
-					Type:  "checkbox",
 					Name:  "$_isAdmin",
+					Value: "true",
+					Data: map[string]interface{}{
+						"label": "Is Admin",
+						"type":  "checkbox",
+					},
 				},
 				{
-					Label: "Age",
 					Value: "20",
-					Type:  "number",
 					Name:  "$_age",
+					Data: map[string]interface{}{
+						"label": "Age",
+						"type":  "number",
+					},
 				},
 			},
 			wantErr: false,
 		},
 
 		{
-			name: "TestForm_ParseCode: #should match with the prefix",
+			name: "TestForm_Parse: #should match with the prefix",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -85,19 +91,21 @@ $age = [
 ];
 `,
 			},
-			want: []Input{
+			want: []Field{
 				{
-					Label: "Name",
 					Value: "billyct",
-					Type:  "text",
 					Name:  "$_name",
+					Data: map[string]interface{}{
+						"label": "Name",
+						"type":  "text",
+					},
 				},
 			},
 			wantErr: false,
 		},
 
 		{
-			name: "TestForm_ParseCode: #with default type",
+			name: "TestForm_Parse: #with default type",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -107,19 +115,20 @@ $_name = [
 ];
 `,
 			},
-			want: []Input{
+			want: []Field{
 				{
-					Label: "Name",
 					Value: "billyct",
-					Type:  "text",
 					Name:  "$_name",
+					Data: map[string]interface{}{
+						"label": "Name",
+					},
 				},
 			},
 			wantErr: false,
 		},
 
 		{
-			name: "TestForm_ParseCode: #error",
+			name: "TestForm_Parse: #error",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -131,6 +140,46 @@ $_name = [
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "TestForm_Parse: #case 1",
+			fields: fields{
+				prefix: "form",
+				code: `
+<?php
+
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+
+$form_email = [
+	'label' => 'Email',
+	'value' => '',
+	'type' => 'text',
+];
+
+// Customer Support
+// when a user does not receive a password reset email
+
+$user = User::where('email', $form_email['value'])->first();
+
+$user->password = bcrypt('your-new-secure-password');
+
+$user->save();
+
+$user;
+`,
+			},
+			want: []Field{
+				{
+					Value: "",
+					Name:  "$form_email",
+					Data: map[string]interface{}{
+						"label": "Email",
+						"type":  "text",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -138,25 +187,25 @@ $_name = [
 				prefix: tt.fields.prefix,
 				code:   tt.fields.code,
 			}
-			got, err := f.GenerateInputs()
+			got, err := f.Parse()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GenerateInputs() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GenerateInputs() got = %v, want %v", got, tt.want)
+				t.Errorf("Parse() got = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestForm_GenerateCodeWithInputs(t *testing.T) {
+func TestForm_Stringify(t *testing.T) {
 	type fields struct {
 		prefix string
 		code   string
 	}
 	type args struct {
-		inputs []Input
+		fields []Field
 	}
 	tests := []struct {
 		name    string
@@ -166,7 +215,7 @@ func TestForm_GenerateCodeWithInputs(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "TestForm_GenerateCodeWithInputs",
+			name: "TestForm_Stringify",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -185,7 +234,7 @@ $_age = [
 `,
 			},
 			args: args{
-				inputs: []Input{
+				fields: []Field{
 					{
 						Value: "hello",
 						Name:  "$_name",
@@ -221,13 +270,13 @@ $_age = [
 				prefix: tt.fields.prefix,
 				code:   tt.fields.code,
 			}
-			got, err := f.GenerateCodeWithInputs(tt.args.inputs)
+			got, err := f.Stringify(tt.args.fields)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GenerateCodeWithInputs() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Stringify() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !strings.Contains(got, tt.want) {
-				t.Errorf("GenerateCodeWithInputs() got = %v, want %v", got, tt.want)
+				t.Errorf("Stringify() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

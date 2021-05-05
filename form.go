@@ -15,7 +15,9 @@ type Form struct {
 }
 
 func NewForm(args... string) *Form {
-	f := &Form{}
+	f := &Form{
+		prefix: "form",
+	}
 
 	if len(args) > 0 {
 		f.code = args[0]
@@ -26,10 +28,6 @@ func NewForm(args... string) *Form {
 	}
 
 	return f
-}
-
-func (f *Form) SetCode(code string) {
-	f.code = code
 }
 
 func (f *Form) Prefix() string {
@@ -55,8 +53,8 @@ func (f *Form) Root() (*ast.Root, error) {
 	return f.root, nil
 }
 
-// 根据输入的 inputs 生成代码
-func (f *Form) GenerateCodeWithInputs(inputs []Input) (string, error) {
+// 根据输入的 fields 生成代码
+func (f *Form) Stringify(fields []Field) (string, error) {
 	root, err := f.Root()
 	if err != nil {
 		return "", err
@@ -67,9 +65,10 @@ func (f *Form) GenerateCodeWithInputs(inputs []Input) (string, error) {
 	for _, stmt := range stmtList {
 		// 如果是表达式
 		if expr, ok := stmt.(*ast.StmtExpression); ok {
-			exprAssign := expr.Expr.(*ast.ExprAssign)
-			if f.IsExprAssignMatched(exprAssign) {
-				f.UpdateExprAssignWithInputs(exprAssign, inputs)
+			if exprAssign, ok := expr.Expr.(*ast.ExprAssign); ok {
+				if f.IsExprAssignMatched(exprAssign) {
+					f.UpdateExprAssign(exprAssign, fields)
+				}
 			}
 		}
 	}
@@ -82,17 +81,17 @@ func (f *Form) GenerateCodeWithInputs(inputs []Input) (string, error) {
 	return buf.String(), nil
 }
 
-// 根据 inputs 更新 ExprAssign
-func (f *Form) UpdateExprAssignWithInputs(expr *ast.ExprAssign, inputs []Input) {
-	for _, input := range inputs {
+// 根据 fields 更新 ExprAssign
+func (f *Form) UpdateExprAssign(expr *ast.ExprAssign, fields []Field) {
+	for _, field := range fields {
 		// 变量名匹配
-		isSameVar := input.Name == f.GetExprValue(expr.Var)
+		isSameVar := field.Name == f.GetExprValue(expr.Var)
 
 		if expr, ok := expr.Expr.(*ast.ExprArray); ok && isSameVar{
 			for _, item := range expr.Items {
 				key, val := f.GetItemExpr(item)
 				if f.GetExprValue(key) == "value" {
-					f.SetExprValue(val, input.Value)
+					f.SetExprValue(val, field.Value)
 
 					return
 				}
@@ -107,22 +106,29 @@ func (f *Form) IsExprAssignMatched(expr *ast.ExprAssign) bool {
 }
 
 // 根据 ExprAssign 获取 Input
-func (f *Form) GetInputFromExprAssign(expr *ast.ExprAssign) *Input {
-	input := NewInput()
+func (f *Form) ParseExprAssign(expr *ast.ExprAssign) *Field {
+	field := NewField()
 
 	if exprArray, ok := expr.Expr.(*ast.ExprArray); ok {
-		input.Set("name", f.GetExprValue(expr.Var))
+		field.SetName(f.GetExprValue(expr.Var))
 
 		for _, item := range exprArray.Items {
-			input.Set(f.GetItemValues(item))
+			field.Set(f.GetItemValues(item))
 		}
 	}
 
-	return input
+	return field
 }
 
-// 解析代码获取 inputs
-func (f *Form) GenerateInputs() ([]Input, error) {
+func (f *Form) ParseCode(code string) ([]Field, error) {
+	f.code = code
+	f.root = nil
+
+	return f.Parse()
+}
+
+// 解析代码获取 fields
+func (f *Form) Parse() ([]Field, error) {
 	root, err := f.Root()
 	if err != nil {
 		return nil, err
@@ -130,23 +136,23 @@ func (f *Form) GenerateInputs() ([]Input, error) {
 
 	stmtList := root.Stmts
 
-	var res []Input
+	var fields []Field
 
 	for _, stmt := range stmtList {
 		// 如果是表达式
 		if expr, ok := stmt.(*ast.StmtExpression); ok {
-
-			exprAssign := expr.Expr.(*ast.ExprAssign)
-			if f.IsExprAssignMatched(exprAssign) {
-				input := f.GetInputFromExprAssign(exprAssign)
-				if !input.IsEmpty() {
-					res = append(res, *input)
+			if exprAssign, ok := expr.Expr.(*ast.ExprAssign); ok {
+				if f.IsExprAssignMatched(exprAssign) {
+					field := f.ParseExprAssign(exprAssign)
+					if !field.IsEmpty() {
+						fields = append(fields, *field)
+					}
 				}
 			}
 		}
 	}
 
-	return res, nil
+	return fields, nil
 }
 
 // 获取 ExprArrayItem 的 kv 表达式

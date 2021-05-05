@@ -16,12 +16,12 @@ import {PHPForm} from '../lib/index.js';
     `, 'next');
 
     document.querySelector('#btn-parse').addEventListener('click', async () => {
-        const res = await form.parseCode()
+        const res = await form.parse()
         console.log(res)
     })
     
     document.querySelector('#btn-stringify').addEventListener('click', function () {
-        form.stringifyCode([{
+        form.stringify([{
             name: '$next_tinker',
             value: 'hello'
         }]).then(res => console.log(res))

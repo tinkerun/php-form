@@ -1,14 +1,22 @@
 {
   "name": "php-form",
-  "version": "1.0.0",
-  "main": "./build/index.js",
+  "version": "0.0.0",
+  "main": "./lib/index.js",
+  "types": "./typings/php-form.d.ts",
   "repository": "https://github.com/tinkerun/php-form.git",
   "author": "billyct <billy_allen@126.com>",
   "license": "MIT",
+  "files": [
+    "lib/",
+    "typings/"
+  ],
   "scripts": {
+    "prestart": "make",
     "start": "node ./build.js",
+    "prebuild": "make",
     "build": "NODE_ENV=production node ./build.js",
-    "lint": "ts-standard \"*.ts\""
+    "lint": "ts-standard \"*.ts\"",
+    "prepublish": "yarn build"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.1",

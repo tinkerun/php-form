@@ -19,7 +19,7 @@ func TestForm_Parse(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "TestForm_Parse: #normal",
+			name: "TestForm_Parse: normal",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -70,7 +70,7 @@ $_age = [
 		},
 
 		{
-			name: "TestForm_Parse: #should match with the prefix",
+			name: "TestForm_Parse: should match with the prefix",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -105,7 +105,7 @@ $age = [
 		},
 
 		{
-			name: "TestForm_Parse: #with default type",
+			name: "TestForm_Parse: with default type",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -128,7 +128,7 @@ $_name = [
 		},
 
 		{
-			name: "TestForm_Parse: #error",
+			name: "TestForm_Parse: error",
 			fields: fields{
 				prefix: "_",
 				code: `
@@ -141,7 +141,7 @@ $_name = [
 			wantErr: true,
 		},
 		{
-			name: "TestForm_Parse: #case 1",
+			name: "TestForm_Parse: case 1",
 			fields: fields{
 				prefix: "form",
 				code: `
@@ -175,6 +175,120 @@ $user;
 					Data: map[string]interface{}{
 						"label": "Email",
 						"type":  "text",
+					},
+				},
+			},
+			wantErr: false,
+		},
+
+		{
+			name: "TestForm_Parse: select type with option array #1",
+			fields: fields{
+				prefix: "_",
+				code: `
+$_lang = [
+	'label' => 'Languages',
+	'value' => 'php',
+	'type' => 'select',
+    'options' => [
+        'c++' => 'cplusplus',
+        'PHP' => 'php',
+        'Go' => 'golang',
+    ],
+];
+`,
+			},
+			want: []Field{
+				{
+					Value: "php",
+					Name:  "$_lang",
+					Data: map[string]interface{}{
+						"label": "Languages",
+						"type":  "select",
+						"options": map[string]interface{}{
+							"c++": "cplusplus",
+							"PHP": "php",
+							"Go":  "golang",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+
+		{
+			name: "TestForm_Parse: select type with option array #2",
+			fields: fields{
+				prefix: "_",
+				code: `
+$_lang = [
+	'label' => 'Languages',
+	'value' => 'php',
+	'type' => 'select',
+    'options' => [
+        'cplusplus',
+        'php',
+        'golang',
+    ],
+];
+`,
+			},
+			want: []Field{
+				{
+					Value: "php",
+					Name:  "$_lang",
+					Data: map[string]interface{}{
+						"label": "Languages",
+						"type":  "select",
+						"options": []interface{}{
+							"cplusplus",
+							"php",
+							"golang",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+
+		{
+			name: "TestForm_Parse: select type with option array #3",
+			fields: fields{
+				prefix: "_",
+				code: `
+$_lang = [
+	'label' => 'Languages',
+	'value' => 'php',
+	'type' => 'select',
+    'options' => [
+		['label' => 'c++', 'value' => 'cplusplus'],
+		['label' => 'PHP', 'value' => 'php'],
+		['label' => 'Go', 'value' => 'golang'],
+    ],
+];
+`,
+			},
+			want: []Field{
+				{
+					Value: "php",
+					Name:  "$_lang",
+					Data: map[string]interface{}{
+						"label": "Languages",
+						"type":  "select",
+						"options": []interface{}{
+							map[string]interface{}{
+								"label": "c++",
+								"value": "cplusplus",
+							},
+							map[string]interface{}{
+								"label": "PHP",
+								"value": "php",
+							},
+							map[string]interface{}{
+								"label": "Go",
+								"value": "golang",
+							},
+						},
 					},
 				},
 			},

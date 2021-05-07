@@ -161,10 +161,44 @@ func (f *Form) GetItemExpr(item ast.Vertex) (ast.Vertex, ast.Vertex) {
 	return expr.Key, expr.Val
 }
 
+// 获取 ExprArray 中的数组数据
+func (f *Form) GetExprArrayValue(expr *ast.ExprArray) interface{} {
+	// 没有 key 的情况，返回数组
+	if keyCheck, _ := f.GetItemExpr(expr.Items[0]); keyCheck == nil {
+		var res []interface{}
+		for _, item := range expr.Items {
+			_, val := f.GetItemValues(item)
+			if val != "" {
+				res = append(res, val)
+			}
+		}
+
+		return res
+	}
+
+	// 返回对象
+	res := make(map[string]interface{})
+	for _, item := range expr.Items {
+		key, val := f.GetItemValues(item)
+		if key != "" {
+			res[key] = val
+		}
+	}
+
+	return res
+}
+
 // 获取 ExprArrayItem 中的 kv 值
-func (f *Form) GetItemValues(item ast.Vertex) (string, string) {
-	key, val := f.GetItemExpr(item)
-	return f.GetExprValue(key), f.GetExprValue(val)
+func (f *Form) GetItemValues(item ast.Vertex) (string, interface{}) {
+	keyExpr, valExpr := f.GetItemExpr(item)
+
+	key := f.GetExprValue(keyExpr)
+
+	if arrayExpr, ok := valExpr.(*ast.ExprArray); ok {
+		return key, f.GetExprArrayValue(arrayExpr)
+	}
+
+	return key, f.GetExprValue(valExpr)
 }
 
 // 获取表达式的值

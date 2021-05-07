@@ -9,10 +9,8 @@ import (
 
 type PromiseFn func(resolve js.Value, reject js.Value, args ...js.Value) interface{}
 
-func JsError(err error) js.Error {
-	return js.Error{
-		Value: js.ValueOf(err.Error()),
-	}
+func JsError(err error) js.Value {
+	return js.Global().Get("Error").New(err.Error())
 }
 
 func JSPromise(fn PromiseFn) js.Func {

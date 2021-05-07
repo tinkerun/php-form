@@ -25,12 +25,12 @@ export class PHPForm {
     this.form = form
   }
 
-  async parse (code?: string): Promise<PHPFormField[]> {
-    return await this.form.parse(code)
+  parse (code?: string): Promise<PHPFormField[]> {
+    return this.form.parse(code)
   }
 
-  async stringify (fields: PHPFormField[]): Promise<string> {
-    return await this.form.stringify(JSON.stringify(fields))
+  stringify (fields: PHPFormField[]): Promise<string> {
+    return this.form.stringify(JSON.stringify(fields))
   }
 
   static async instance (code?: string, prefix?: string): Promise<PHPForm> {

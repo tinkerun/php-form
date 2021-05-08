@@ -1,6 +1,6 @@
 {
   "name": "php-form",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "./lib/index.js",
   "types": "./typings/php-form.d.ts",
   "repository": "https://github.com/tinkerun/php-form.git",

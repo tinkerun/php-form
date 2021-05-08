@@ -22,22 +22,23 @@ The full API for php-form is contained within the [TypeScript declaration file](
 import {instance} from 'php-form'
 
 (async () => {
-  const code = `
+
+  const form = await instance()
+
+  let code = `<?php
   $form_email = [
     'label' => 'Email',
     'value' => 'user1@example.com',
   ];
   `
   
-  const form = await instance()
-  
   const fields = await form.parse(code)
   // [{name: '$form_email', label: 'Email', value: 'user1@example.com'}]
   
   fields[0].value = 'user2@example.com'
   
-  const code = await form.stringify(fields)
-  // $form_email = [
+  code = await form.stringify(fields)
+  // <?php $form_email = [
   //   'label' => 'Email',
   //   'value' => 'user2@example.com',
   // ];

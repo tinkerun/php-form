@@ -2,13 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>php form</title>
+    <title>php-form</title>
 </head>
 <body>
 
-<button id="btn-parse">parse</button>
-<button id="btn-stringify">stringify</button>
+<script type="module">
+import {instance} from '../lib/index.js';
 
-<script src="./index.js" type="module"></script>
+(async () => {
+    const form = await instance()
+
+    let code = `<?php
+    $form_email = [
+        'label' => 'Email',
+        'value' => 'user1@example.com',
+    ];
+    `  
+    
+    const fields = await form.parse(code)
+
+    console.log(JSON.stringify(fields))
+    
+    fields[0].value = 'user2@example.com'
+    
+    code = await form.stringify(fields)
+
+    console.log(code)
+    
+})()
+</script>
 </body>
 </html>

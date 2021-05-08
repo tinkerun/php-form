@@ -2,17 +2,16 @@ declare module 'php-form' {
     /**
     * 获取并且初始化 PHPForm 对象
     * 
-    * @param code 需要生成表单的代码
     * @param prefix 自定义变量前缀，默认使用 `form_`
     */
-    export function instance (code?: string, prefix?: string): Promise<PHPForm>
+    export function instance (prefix?: string): Promise<PHPForm>
 
     export interface PHPForm {
         /**
          * 解析 php 代码，得到表单结构
-         * @param code 需要解析的代码，默认使用初始化时候的 code
+         * @param code 需要解析的代码
          */
-        parse: (code?: string) => Promise<PHPFormField[]>
+        parse: (code: string) => Promise<PHPFormField[]>
 
         /**
          * 根据表单的输入数据，返回填充值之后的代码

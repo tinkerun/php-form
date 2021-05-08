@@ -14,20 +14,19 @@ type Form struct {
 	root   *ast.Root
 }
 
-func NewForm(args... string) *Form {
-	f := &Form{
+func NewForm() *Form {
+	return &Form{
 		prefix: "form",
 	}
+}
 
-	if len(args) > 0 {
-		f.code = args[0]
-	}
+func (f *Form) SetPrefix(prefix string) {
+	f.prefix = prefix
+}
 
-	if len(args) > 1 {
-		f.prefix = args[1]
-	}
-
-	return f
+func (f *Form) SetCode(code string)  {
+	f.code = code
+	f.root = nil
 }
 
 func (f *Form) Prefix() string {
@@ -121,9 +120,7 @@ func (f *Form) ParseExprAssign(expr *ast.ExprAssign) *Field {
 }
 
 func (f *Form) ParseCode(code string) ([]Field, error) {
-	f.code = code
-	f.root = nil
-
+	f.SetCode(code)
 	return f.Parse()
 }
 

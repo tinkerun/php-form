@@ -29,23 +29,17 @@ func JSPromise(fn PromiseFn) js.Func {
 }
 
 func PHPForm(_ js.Value, args []js.Value) interface{} {
+	form := NewForm()
 
-	var ss []string
-	for _, arg := range args {
-		if !arg.IsUndefined() {
-			ss = append(ss, arg.String())
-		}
+	if len(args) > 0 && !args[0].IsUndefined() {
+		form.SetPrefix(args[0].String())
 	}
-
-	form := NewForm(ss...)
 
 	return map[string]interface{}{
 		"stringify": JSPromise(func(resolve js.Value, reject js.Value, args ...js.Value) interface{} {
-			s := args[0].String()
-
 			var ms []map[string]interface{}
 
-			err := json.Unmarshal([]byte(s), &ms)
+			err := json.Unmarshal([]byte(args[0].String()), &ms)
 			if err != nil {
 				return reject.Invoke(JsError(err))
 			}
@@ -63,16 +57,7 @@ func PHPForm(_ js.Value, args []js.Value) interface{} {
 			return resolve.Invoke(res)
 		}),
 		"parse": JSPromise(func(resolve js.Value, reject js.Value, args ...js.Value) interface{} {
-
-			var fields []Field
-			var err error
-
-			if len(args) > 0 && !args[0].IsUndefined() {
-				// 如果有参数则将第一个参数作为 code 传给 form
-				fields, err = form.ParseCode(args[0].String())
-			} else {
-				fields, err = form.Parse()
-			}
+			fields, err := form.ParseCode(args[0].String())
 
 			if err != nil {
 				return reject.Invoke(JsError(err))

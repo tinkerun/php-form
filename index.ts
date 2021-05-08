@@ -8,8 +8,8 @@ interface PHPFormField {
 }
 
 interface IPHPFormFunc {
-  (code?: string, prefix?: string): IPHPFormFunc
-  parse: (code?: string) => Promise<PHPFormField[]>
+  (prefix?: string): IPHPFormFunc
+  parse: (code: string) => Promise<PHPFormField[]>
   stringify: (fieldsString: string) => Promise<string>
 }
 
@@ -17,34 +17,30 @@ declare var PHPFormFunc: IPHPFormFunc
 declare var Go: any
 
 export class PHPForm {
-  private static phpForm: PHPForm | undefined
-
   private readonly form: IPHPFormFunc
 
   constructor (form: IPHPFormFunc) {
     this.form = form
   }
 
-  parse (code?: string): Promise<PHPFormField[]> {
-    return this.form.parse(code)
+  async parse (code: string): Promise<PHPFormField[]> {
+    return await this.form.parse(code)
   }
 
-  stringify (fields: PHPFormField[]): Promise<string> {
-    return this.form.stringify(JSON.stringify(fields))
-  }
-
-  static async instance (code?: string, prefix?: string): Promise<PHPForm> {
-    if (PHPForm.phpForm != null) {
-      return PHPForm.phpForm
-    }
-
-    const go = new Go()
-    const instance = await load(go.importObject)
-    go.run(instance)
-
-    PHPForm.phpForm = new PHPForm(PHPFormFunc(code, prefix))
-    return PHPForm.phpForm
+  async stringify (fields: PHPFormField[]): Promise<string> {
+    return await this.form.stringify(JSON.stringify(fields))
   }
 }
 
-export const instance = PHPForm.instance
+let loaded = false
+
+export async function instance (prefix?: string): Promise<PHPForm> {
+  if (!loaded) {
+    const go = new Go()
+    const instance = await load(go.importObject)
+    go.run(instance)
+    loaded = true
+  }
+
+  return new PHPForm(PHPFormFunc(prefix))
+}

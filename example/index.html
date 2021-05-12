@@ -17,6 +17,8 @@ import {instance} from '../lib/index.js';
         'label' => 'Email',
         'value' => 'user1@example.com',
     ];
+
+    $form_name = 'billy';
     `  
     
     const fields = await form.parse(code)
@@ -24,7 +26,8 @@ import {instance} from '../lib/index.js';
     console.log(JSON.stringify(fields))
     
     fields[0].value = 'user2@example.com'
-    
+    fields[1].value = 'magic'
+
     code = await form.stringify(fields)
 
     console.log(code)

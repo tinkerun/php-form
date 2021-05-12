@@ -46,3 +46,6 @@ import {instance} from 'php-form'
 
 
 ```
+
+## License
+[MIT](./LICENSE)

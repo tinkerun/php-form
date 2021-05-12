@@ -30,18 +30,23 @@ import {instance} from 'php-form'
     'label' => 'Email',
     'value' => 'user1@example.com',
   ];
+  
+  $form_name = 'billy'
   `
   
   const fields = await form.parse(code)
-  // [{name: '$form_email', label: 'Email', value: 'user1@example.com'}]
+  // [{name: '$form_email', label: 'Email', value: 'user1@example.com'}, {name: '$form_name', value: 'billy'}]
   
   fields[0].value = 'user2@example.com'
+  fields[1].value = 'magic'
   
   code = await form.stringify(fields)
   // <?php $form_email = [
   //   'label' => 'Email',
   //   'value' => 'user2@example.com',
   // ];
+  // 
+  // $form_name = 'magic'
 })
 
 

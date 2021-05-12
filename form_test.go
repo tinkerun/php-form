@@ -2,7 +2,6 @@ package main
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -64,6 +63,33 @@ $_age = [
 						"label": "Age",
 						"type":  "number",
 					},
+				},
+			},
+			wantErr: false,
+		},
+
+		{
+			name: "TestForm_Parse: short",
+			fields: fields{
+				prefix: "_",
+				code: `
+$_name = 'billyct';
+$_isAdmin = true;
+$_age = 20;
+`,
+			},
+			want: []Field{
+				{
+					Name:  "$_name",
+					Value: "billyct",
+				},
+				{
+					Name:  "$_isAdmin",
+					Value: "true",
+				},
+				{
+					Value: "20",
+					Name:  "$_age",
 				},
 			},
 			wantErr: false,
@@ -363,7 +389,8 @@ $_age = [
 					},
 				},
 			},
-			want: `$_name = [
+			want: `
+$_name = [
 	'label' => 'Name',
 	'value' => 'hello',
 ];
@@ -375,6 +402,38 @@ $_age = [
 	'label' => 'Age',
 	'value' => 30,
 ];`,
+			wantErr: false,
+		},
+		{
+			name: "TestForm_Stringify: short",
+			fields: fields{
+				prefix: "_",
+				code: `
+$_name = 'billyct';
+$_isAdmin = true;
+$_age = 20;
+`,
+			},
+			args: args{
+				fields: []Field{
+					{
+						Name:  "$_name",
+						Value: "magic",
+					},
+					{
+						Name:  "$_isAdmin",
+						Value: "false",
+					},
+					{
+						Value: "30",
+						Name:  "$_age",
+					},
+				},
+			},
+			want: `
+$_name = 'magic';
+$_isAdmin = false;
+$_age = 30;`,
 			wantErr: false,
 		},
 	}
@@ -389,7 +448,7 @@ $_age = [
 				t.Errorf("Stringify() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !strings.Contains(got, tt.want) {
+			if got != tt.want {
 				t.Errorf("Stringify() got = %v, want %v", got, tt.want)
 			}
 		})

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"github.com/z7zmey/php-parser/pkg/ast"
 	"github.com/z7zmey/php-parser/pkg/conf"
@@ -9,14 +8,6 @@ import (
 	"github.com/z7zmey/php-parser/pkg/parser"
 	"github.com/z7zmey/php-parser/pkg/version"
 )
-
-func Parse(code []byte) (ast.Vertex, error) {
-	code = bytes.TrimSpace(code)
-	if bytes.HasPrefix(code, []byte("<?")) || bytes.HasPrefix(code, []byte("<?php")) {
-		return ParseCode(code)
-	}
-	return ParseStmtList(code)
-}
 
 func ParseCode(code []byte) (*ast.Root, error) {
 	phpVersion, err := version.New("7.4")
@@ -49,9 +40,4 @@ func ParseCode(code []byte) (*ast.Root, error) {
 	}
 
 	return res, nil
-}
-
-func ParseStmtList(code []byte) (*ast.Root, error) {
-	code = append([]byte("<?php "), code...)
-	return ParseCode(code)
 }

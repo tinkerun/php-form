@@ -22,16 +22,16 @@ func TestNewFieldWithMap(t *testing.T) {
 				},
 			},
 			want: &Field{
-				Name:  "Name",
+				Name: "Name",
 			},
 		},
 		{
 			name: "TestNewFieldWithMap: #2",
 			args: args{
 				m: map[string]interface{}{
-					"name": "Name",
-					"value": "default value",
-					"other": "other",
+					"name":   "Name",
+					"value":  "default value",
+					"other":  "other",
 					"other2": "other2",
 				},
 			},
@@ -39,7 +39,7 @@ func TestNewFieldWithMap(t *testing.T) {
 				Name:  "Name",
 				Value: "default value",
 				Data: map[string]interface{}{
-					"other": "other",
+					"other":  "other",
 					"other2": "other2",
 				},
 			},
@@ -60,13 +60,13 @@ func TestField_Set(t *testing.T) {
 		v interface{}
 	}
 	tests := []struct {
-		name   string
-		args   args
+		name string
+		args args
 		want *Field
 	}{
 		{
-			name:   "TestField_Set: #1",
-			args:   args{
+			name: "TestField_Set: #1",
+			args: args{
 				k: "name",
 				v: "hello",
 			},
@@ -76,8 +76,8 @@ func TestField_Set(t *testing.T) {
 		},
 
 		{
-			name:   "TestField_Set: #2",
-			args:   args{
+			name: "TestField_Set: #2",
+			args: args{
 				k: "value",
 				v: "hello",
 			},
@@ -87,8 +87,8 @@ func TestField_Set(t *testing.T) {
 		},
 
 		{
-			name:   "TestField_Set: #3",
-			args:   args{
+			name: "TestField_Set: #3",
+			args: args{
 				k: "other",
 				v: "other",
 			},
@@ -122,31 +122,31 @@ func TestField_ToMap(t *testing.T) {
 		want   map[string]interface{}
 	}{
 		{
-			name:   "TestField_ToMap: #1",
+			name: "TestField_ToMap: #1",
 			fields: fields{
 				Name:  "name1",
 				Value: "value1",
 				Data:  nil,
 			},
 			want: map[string]interface{}{
-				"name": "name1",
+				"name":  "name1",
 				"value": "value1",
 			},
 		},
 		{
-			name:   "TestField_ToMap: #2",
+			name: "TestField_ToMap: #2",
 			fields: fields{
 				Name:  "name2",
 				Value: "value2",
 				Data: map[string]interface{}{
-					"type": "type2",
+					"type":  "type2",
 					"label": "label2",
 				},
 			},
 			want: map[string]interface{}{
-				"name": "name2",
+				"name":  "name2",
 				"value": "value2",
-				"type": "type2",
+				"type":  "type2",
 				"label": "label2",
 			},
 		},

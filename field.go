@@ -20,12 +20,16 @@ func NewFieldWithMap(m map[string]interface{}) *Field {
 	return f
 }
 
-func (f *Field) SetName(name string)  {
+func (f *Field) SetName(name string) {
 	f.Name = name
 }
 
 func (f *Field) GetName() string {
 	return f.Name
+}
+
+func (f *Field) SetValue(v string) {
+	f.Value = v
 }
 
 func (f *Field) Set(k string, v interface{}) {

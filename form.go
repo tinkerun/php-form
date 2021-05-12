@@ -24,9 +24,14 @@ func (f *Form) SetPrefix(prefix string) {
 	f.prefix = prefix
 }
 
-func (f *Form) SetCode(code string)  {
+func (f *Form) SetCode(code string) {
 	f.code = code
 	f.root = nil
+}
+
+func (f *Form) IsSnippetCode() bool {
+	code := strings.TrimSpace(f.code)
+	return !(strings.HasPrefix(code, "<?") || strings.HasPrefix(code, "<?php"))
 }
 
 func (f *Form) Prefix() string {
@@ -42,13 +47,18 @@ func (f *Form) Root() (*ast.Root, error) {
 		return f.root, nil
 	}
 
-	root, err := Parse([]byte(f.code))
+	code := f.code
+	// 如果是代码片段
+	if f.IsSnippetCode() {
+		code = fmt.Sprintf("<?php %s", f.code)
+	}
+
+	root, err := ParseCode([]byte(code))
 	if err != nil {
 		return nil, err
 	}
 
-	f.root = root.(*ast.Root)
-
+	f.root = root
 	return f.root, nil
 }
 
@@ -77,25 +87,34 @@ func (f *Form) Stringify(fields []Field) (string, error) {
 	pr := printer.NewPrinter(buf)
 	root.Accept(pr)
 
-	return buf.String(), nil
+	res := buf.String()
+	if f.IsSnippetCode() {
+		res = strings.Replace(res, "<?php ", "", 1)
+	}
+
+	return res, nil
 }
 
 // 根据 fields 更新 ExprAssign
 func (f *Form) UpdateExprAssign(expr *ast.ExprAssign, fields []Field) {
 	for _, field := range fields {
 		// 变量名匹配
-		isSameVar := field.Name == f.GetExprValue(expr.Var)
+		if field.Name == f.GetExprValue(expr.Var) {
+			switch e := expr.Expr.(type) {
+			case *ast.ExprArray:
+				for _, item := range e.Items {
+					key, val := f.GetItemExpr(item)
+					if f.GetExprValue(key) == "value" {
+						f.SetExprValue(val, field.Value)
 
-		if expr, ok := expr.Expr.(*ast.ExprArray); ok && isSameVar{
-			for _, item := range expr.Items {
-				key, val := f.GetItemExpr(item)
-				if f.GetExprValue(key) == "value" {
-					f.SetExprValue(val, field.Value)
-
-					return
+						return
+					}
 				}
+			default:
+				f.SetExprValue(e, field.Value)
 			}
 		}
+
 	}
 }
 
@@ -108,12 +127,15 @@ func (f *Form) IsExprAssignMatched(expr *ast.ExprAssign) bool {
 func (f *Form) ParseExprAssign(expr *ast.ExprAssign) *Field {
 	field := NewField()
 
-	if exprArray, ok := expr.Expr.(*ast.ExprArray); ok {
-		field.SetName(f.GetExprValue(expr.Var))
+	field.SetName(f.GetExprValue(expr.Var))
 
-		for _, item := range exprArray.Items {
+	switch e := expr.Expr.(type) {
+	case *ast.ExprArray:
+		for _, item := range e.Items {
 			field.Set(f.GetItemValues(item))
 		}
+	case *ast.ScalarString, *ast.ScalarLnumber, *ast.ScalarDnumber, *ast.ExprConstFetch:
+		field.SetValue(f.GetExprValue(e))
 	}
 
 	return field

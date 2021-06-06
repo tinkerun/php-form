@@ -320,6 +320,62 @@ $_lang = [
 			},
 			wantErr: false,
 		},
+		{
+			name: "TestForm_Parse: option with function",
+			fields: fields{
+				prefix: "_",
+				code: `
+$_lang = [
+	'label' => 'Languages',
+	'value' => 'php',
+	'type' => 'select',
+    'options' => function() {
+		return User::selectRaw('first_name as label, id as value')->get()->toArray();
+	},
+];
+`,
+			},
+			want: []Field{
+				{
+					Value: "php",
+					Name:  "$_lang",
+					Data: map[string]interface{}{
+						"label": "Languages",
+						"type":  "select",
+						"options": `function() {
+		return User::selectRaw('first_name as label, id as value')->get()->toArray();
+	}`,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "TestForm_Parse: option with fn",
+			fields: fields{
+				prefix: "_",
+				code: `
+$_lang = [
+	'label' => 'Languages',
+	'value' => 'php',
+	'type' => 'select',
+    'options' => fn() => Language::all(),
+];
+`,
+			},
+			want: []Field{
+				{
+					Value: "php",
+					Name:  "$_lang",
+					Data: map[string]interface{}{
+						"label": "Languages",
+						"type":  "select",
+						"options": "fn() => Language::all()",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -235,6 +235,12 @@ func (f *Form) GetExprValue(expr ast.Vertex) string {
 		res = v.Value
 	case *ast.ExprConstFetch:
 		res = v.Const.(*ast.Name).Parts[0].(*ast.NamePart).Value
+	case *ast.ExprClosure, *ast.ExprArrowFunction:
+		buf := &bytes.Buffer{}
+		pr := printer.NewPrinter(buf)
+		v.Accept(pr)
+		res = buf.Bytes()
+		res = bytes.TrimLeft(res, "<?php  ")
 	}
 
 	return string(res)

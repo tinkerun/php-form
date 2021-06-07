@@ -376,6 +376,67 @@ $_lang = [
 			},
 			wantErr: false,
 		},
+		{
+			name: "TestForm_Parse: option with fn with variables",
+			fields: fields{
+				prefix: "_",
+				code: `
+$options = fn() => Language::all();
+$_lang = [
+	'label' => 'Languages',
+	'value' => 'php',
+	'type' => 'select',
+    'options' => $options,
+];
+`,
+			},
+			want: []Field{
+				{
+					Value: "php",
+					Name:  "$_lang",
+					Data: map[string]interface{}{
+						"label": "Languages",
+						"type":  "select",
+						"options": "fn() => Language::all()",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "TestForm_Parse: short variables",
+			fields: fields{
+				prefix: "_",
+				code: `
+$options = '$options';
+$_lang = $options;
+`,
+			},
+			want: []Field{
+				{
+					Value: "$options",
+					Name:  "$_lang",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "TestForm_Parse: short variables with loop",
+			fields: fields{
+				prefix: "_",
+				code: `
+$options = $options;
+$_lang = $options;
+`,
+			},
+			want: []Field{
+				{
+					Value: "",
+					Name:  "$_lang",
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

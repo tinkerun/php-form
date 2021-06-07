@@ -99,7 +99,7 @@ func (f *Form) Stringify(fields []Field) (string, error) {
 func (f *Form) UpdateExprAssign(expr *ast.ExprAssign, fields []Field) {
 	for _, field := range fields {
 		// 变量名匹配
-		if field.Name == f.GetExprValue(expr.Var) {
+		if field.Name == f.GetExprVariableName(expr.Var) {
 			switch e := expr.Expr.(type) {
 			case *ast.ExprArray:
 				for _, item := range e.Items {
@@ -120,21 +120,26 @@ func (f *Form) UpdateExprAssign(expr *ast.ExprAssign, fields []Field) {
 
 // 表达式的变量是否匹配前缀
 func (f *Form) IsExprAssignMatched(expr *ast.ExprAssign) bool {
-	return strings.HasPrefix(f.GetExprValue(expr.Var), f.Prefix())
+	return strings.HasPrefix(f.GetExprVariableName(expr.Var), f.Prefix())
+}
+
+// 表达式的变量是否一样
+func (f *Form) IsExprAssignEqualed(expr *ast.ExprAssign, name string) bool {
+	return f.GetExprVariableName(expr.Var) == name
 }
 
 // 根据 ExprAssign 获取 Input
 func (f *Form) ParseExprAssign(expr *ast.ExprAssign) *Field {
 	field := NewField()
 
-	field.SetName(f.GetExprValue(expr.Var))
+	field.SetName(f.GetExprVariableName(expr.Var))
 
 	switch e := expr.Expr.(type) {
 	case *ast.ExprArray:
 		for _, item := range e.Items {
 			field.Set(f.GetItemValues(item))
 		}
-	case *ast.ScalarString, *ast.ScalarLnumber, *ast.ScalarDnumber, *ast.ExprConstFetch:
+	default:
 		field.SetValue(f.GetExprValue(e))
 	}
 
@@ -220,13 +225,52 @@ func (f *Form) GetItemValues(item ast.Vertex) (string, interface{}) {
 	return key, f.GetExprValue(valExpr)
 }
 
+// 获取表达式变量名称
+func (f *Form) GetExprVariableName(expr ast.Vertex) string {
+	if exprVariable, ok := expr.(*ast.ExprVariable); ok {
+		return string(exprVariable.Name.(*ast.Identifier).Value)
+	}
+	return ""
+}
+
+// 获取变量的值
+func (f *Form) GetExprVariableValue(expr *ast.ExprVariable) string {
+	root, err := f.Root()
+	if err != nil {
+		return ""
+	}
+
+	stmtList := root.Stmts
+
+	for i := len(stmtList) - 1; i >= 0; i-- {
+		stmt := stmtList[i]
+
+		// 如果是表达式
+		if exprStmt, ok := stmt.(*ast.StmtExpression); ok &&
+			stmt.GetPosition().StartLine < expr.GetPosition().StartLine {
+			if exprAssign, ok := exprStmt.Expr.(*ast.ExprAssign); ok {
+
+				if exprAssign.Expr.GetPosition() == expr.GetPosition() {
+					return ""
+				}
+
+				if f.IsExprAssignEqualed(exprAssign, f.GetExprVariableName(expr)) {
+					return f.GetExprValue(exprAssign.Expr)
+				}
+			}
+		}
+	}
+
+	return ""
+}
+
 // 获取表达式的值
 func (f *Form) GetExprValue(expr ast.Vertex) string {
 	var res []byte
 
 	switch v := expr.(type) {
 	case *ast.ExprVariable:
-		res = v.Name.(*ast.Identifier).Value
+		return f.GetExprVariableValue(v)
 	case *ast.ScalarString:
 		res = v.Value[1 : len(v.Value)-1]
 	case *ast.ScalarLnumber:

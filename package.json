@@ -1,7 +1,8 @@
 {
   "name": "php-form",
   "version": "0.0.7",
-  "main": "./lib/index.js",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
   "types": "./typings/php-form.d.ts",
   "repository": "https://github.com/tinkerun/php-form.git",
   "author": "billyct <billy_allen@126.com>",

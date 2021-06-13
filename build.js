@@ -57,23 +57,32 @@ const wasmPlugin = {
   },
 }
 
-build({
-  entryPoints: [
-    'index.ts'
-  ],
-  format: 'esm',
-  bundle: true,
-  outdir: 'lib',
-  plugins: [wasmPlugin],
-  external: [
-    'fs',
-    'crypto',
-    'util',
-    'os'
-  ],
-  watch: true,
-  ...isProduction && {
-    minify: true,
-    watch: false,
-  }
-}).catch(() => process.exit(1))
+const config = {
+ entryPoints: [
+   'index.ts'
+ ],
+ format: 'esm',
+ bundle: true,
+ outdir: 'lib/esm',
+ plugins: [wasmPlugin],
+ external: [
+   'fs',
+   'crypto',
+   'util',
+   'os'
+ ],
+ watch: true,
+ ...isProduction && {
+   minify: true,
+   watch: false,
+ }
+}
+
+const cjsConfig = {
+  ...config,
+  format: 'cjs',
+  outdir: 'lib/cjs',
+}
+
+build(config).catch(() => process.exit(1))
+build(cjsConfig).catch(() => process.exit(1))
